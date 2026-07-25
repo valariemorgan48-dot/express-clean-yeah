@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  employee     Employee?
+  createdAt    DateTime @default(now())
+}
+
+model Employee {
+  id         String   @id @default(cuid())
+  name       String
+  jobType    String
+  userId     String?  @unique
+  user       User?    @relation(fields: [userId], references: [id])
+  timeEntries TimeEntry[]
+  shifts     Shift[]
+  templates  RecurringTemplate[]
+  createdAt  DateTime @default(now())
+}
+
+model TimeEntry {
+  id         String    @id @default(cuid())
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  clockIn    DateTime
+  clockOut   DateTime?
+  jobType    String?
+  address    String?
+  createdAt  DateTime  @default(now())
+}
+
+// A concrete, dated shift instance shown on the schedule.
+model Shift {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  date        DateTime  // the calendar date of the shift
+  time        String    // e.g. "9:00 AM"
+  jobType     String
+  address     String
+  templateId  String?
+  template    RecurringTemplate? @relation(fields: [templateId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+// A weekly-recurring rule a manager creates; the API expands it into
+// concrete Shift rows for the current/upcoming work week.
+model RecurringTemplate {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  dayOfWeek  Int      // 0=Sun..6=Sat, JS getDay() convention
+  time       String
+  jobType    String
+  address    String
+  active     Boolean  @default(true)
+  shifts     Shift[]
+  createdAt  DateTime @default(now())
+}
