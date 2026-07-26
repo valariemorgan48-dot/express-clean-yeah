@@ -31,7 +31,7 @@ export default function LoginPage() {
           <label>Password</label>
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
-        {error && <div style={{ color: "#a33", fontSize: 13, marginTop: 8 }}>{error}</div>}
+        {error && <div style={{ color: "#ff6b6b", fontSize: 13, marginTop: 8 }}>{error}</div>}
         <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} type="submit">Sign In</button>
       </form>
     </div>
