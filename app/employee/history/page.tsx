@@ -16,9 +16,12 @@ export default function EmployeeHistory() {
       <h3>Pay & Hours History</h3>
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         {history.map((w, i) => (
-          <BlueprintCard key={i} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <div className="card-title" style={{ fontSize: 15 }}>{w.label}{i === 0 ? " (current)" : ""}</div>
-            <div className="tag tag-accent">{w.hours} hrs</div>
+          <BlueprintCard key={i}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <div className="card-title" style={{ fontSize: 15 }}>{w.label}{i === 0 ? " (current)" : ""}</div>
+              <div className="tag tag-accent">${w.pay.toFixed(2)}</div>
+            </div>
+            <div className="card-meta">{w.hours} hrs at ${w.hourlyRate.toFixed(2)}/hr</div>
           </BlueprintCard>
         ))}
       </div>
