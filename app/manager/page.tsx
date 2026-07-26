@@ -8,7 +8,7 @@ export default function ManagerHome() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [weekLabel, setWeekLabel] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", jobType: JOB_TYPES[0], email: "", password: "" });
+  const [form, setForm] = useState({ name: "", jobType: JOB_TYPES[0], email: "", password: "", hourlyRate: "" });
   const [error, setError] = useState("");
 
   async function refresh() {
@@ -34,7 +34,7 @@ export default function ManagerHome() {
       setError(d.error || "Could not add employee");
       return;
     }
-    setForm({ name: "", jobType: JOB_TYPES[0], email: "", password: "" });
+    setForm({ name: "", jobType: JOB_TYPES[0], email: "", password: "", hourlyRate: "" });
     setShowForm(false);
     refresh();
   }
@@ -45,6 +45,23 @@ export default function ManagerHome() {
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       alert(d.error || `Could not remove employee (status ${res.status})`);
+      return;
+    }
+    refresh();
+  }
+
+  async function editRate(e: any) {
+    const input = prompt(`New hourly rate for ${e.name}:`, e.hourlyRate);
+    if (input === null) return;
+    const rate = Number(input);
+    if (isNaN(rate) || rate < 0) {
+      alert("Enter a valid non-negative number.");
+      return;
+    }
+    const res = await fetch("/api/employees", { method: "PATCH", body: JSON.stringify({ id: e.id, hourlyRate: rate }) });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert(d.error || "Could not update rate");
       return;
     }
     refresh();
@@ -95,6 +112,10 @@ export default function ManagerHome() {
             <label>Temporary password</label>
             <input className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" />
           </div>
+          <div className="field">
+            <label>Hourly rate ($)</label>
+            <input className="input" type="number" min="0" step="0.01" value={form.hourlyRate} onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })} placeholder="e.g. 18.50" />
+          </div>
           {error && <div style={{ color: "#ff6b6b", fontSize: 13 }}>{error}</div>}
           <button className="btn btn-primary btn-block" onClick={addEmployee}>Add Employee</button>
         </BlueprintCard>
@@ -112,6 +133,7 @@ export default function ManagerHome() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div className="tag tag-accent">{e.weeklyHours} hrs</div>
+              <button onClick={() => editRate(e)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>${e.hourlyRate.toFixed(2)}/hr</button>
               <button onClick={() => removeEmployee(e.id)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>Remove</button>
             </div>
           </BlueprintCard>
