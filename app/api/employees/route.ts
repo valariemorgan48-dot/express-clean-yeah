@@ -5,8 +5,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getWorkWeekBounds } from "@/lib/workweek";
 
-// GET: all employees with total hours worked in the current work week
-// (Fri 12:00 AM – Thu 11:59:59 PM) and whether they're currently clocked in.
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
@@ -17,6 +15,7 @@ export async function GET() {
   const employees = await prisma.employee.findMany({
     include: {
       timeEntries: { where: { clockIn: { gte: start, lte: end } } },
+      jobRates: true,
     },
     orderBy: { name: "asc" },
   });
@@ -28,11 +27,14 @@ export async function GET() {
       return sum + (endMs - t.clockIn.getTime());
     }, 0);
     const isClockedInNow = e.timeEntries.some((t) => !t.clockOut);
+    const jobRates: Record<string, number> = {};
+    for (const jr of e.jobRates) jobRates[jr.jobType] = jr.rate;
     return {
       id: e.id,
       name: e.name,
       jobType: e.jobType,
       hourlyRate: e.hourlyRate,
+      jobRates,
       weeklyHours: Math.round((totalMs / 3_600_000) * 100) / 100,
       isClockedInNow,
     };
@@ -41,8 +43,6 @@ export async function GET() {
   return NextResponse.json({ employees: result, weekStart: start, weekEnd: end });
 }
 
-// Manager adds a real employee: creates their login (email + temp password)
-// and Employee record together.
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
@@ -63,7 +63,6 @@ export async function POST(req: Request) {
   return NextResponse.json({ employee: user.employee });
 }
 
-// Manager updates an employee's hourly rate.
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
@@ -77,7 +76,6 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ employee });
 }
 
-// Manager removes an employee (and their login).
 export async function DELETE(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
