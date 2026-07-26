@@ -41,7 +41,12 @@ export default function ManagerHome() {
 
   async function removeEmployee(id: string) {
     if (!confirm("Remove this employee? This deletes their login and history.")) return;
-    await fetch(`/api/employees?id=${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/employees?id=${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert(d.error || `Could not remove employee (status ${res.status})`);
+      return;
+    }
     refresh();
   }
 
