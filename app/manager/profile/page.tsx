@@ -17,7 +17,7 @@ export default function ManagerProfile() {
       </BlueprintCard>
       <div style={{ marginTop: 14, display: "flex", flexDirection: "column" }}>
         <Link href="/manager/timeoff" style={linkStyle}>Approve time-off requests</Link>
-        <div style={{ padding: "14px 4px", borderBottom: "1px solid var(--color-divider)", fontFamily: "var(--font-heading)", fontWeight: 600, opacity: 0.5 }}>Payroll export (coming soon)</div>
+        <Link href="/manager/payroll" style={linkStyle}>Payroll export</Link>
         <ChangePasswordForm />
       </div>
     </div>
