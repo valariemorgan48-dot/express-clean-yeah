@@ -2,21 +2,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@400;600&display=swap');
 
 :root {
-  --color-bg: #f2f2f3;
-  --color-surface: #e9e9ea;
-  --color-text: #1d1f20;
-  --color-accent: #5980a6;
-  --color-divider: color-mix(in srgb, #1d1f20 16%, transparent);
+  --color-bg: #0b0d0b;
+  --color-surface: #171a17;
+  --color-text: #edf1ed;
+  --color-accent: #3ea55c;
+  --color-divider: color-mix(in srgb, #edf1ed 16%, transparent);
 
-  --color-neutral-200: #e7e7ea;
-  --color-neutral-400: #b7b7ba;
-  --color-neutral-800: #424244;
+  --color-neutral-200: #202320;
+  --color-neutral-400: #5b615b;
+  --color-neutral-800: #cdd3cd;
 
-  --color-accent-100: #eef6ff;
-  --color-accent-600: #597ea3;
-  --color-accent-700: #416180;
-  --color-accent-800: #2c455d;
-  --color-accent-900: #1d2d3d;
+  --color-accent-100: color-mix(in srgb, #3ea55c 20%, transparent);
+  --color-accent-600: #35934f;
+  --color-accent-700: #7ed69a;
+  --color-accent-800: #a9e8bd;
+  --color-accent-900: #3ea55c;
 
   --font-heading: "Barlow Condensed", system-ui, sans-serif;
   --font-body: "Barlow", system-ui, sans-serif;
