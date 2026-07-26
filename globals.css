@@ -1,0 +1,73 @@
+/* Industry design system tokens — kept identical to the prototype */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@400;600&display=swap');
+
+:root {
+  --color-bg: #f2f2f3;
+  --color-surface: #e9e9ea;
+  --color-text: #1d1f20;
+  --color-accent: #5980a6;
+  --color-divider: color-mix(in srgb, #1d1f20 16%, transparent);
+
+  --color-neutral-200: #e7e7ea;
+  --color-neutral-400: #b7b7ba;
+  --color-neutral-800: #424244;
+
+  --color-accent-100: #eef6ff;
+  --color-accent-600: #597ea3;
+  --color-accent-700: #416180;
+  --color-accent-800: #2c455d;
+  --color-accent-900: #1d2d3d;
+
+  --font-heading: "Barlow Condensed", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, sans-serif;
+  --radius-md: 4px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading); font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em;
+}
+h6 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+a { color: var(--color-accent); text-underline-offset: 3px; }
+a:hover { color: var(--color-accent-700); }
+button { font-family: inherit; }
+
+.blueprint { position: relative; border: 1px solid var(--color-divider); border-radius: 0; }
+.blueprint > .corner { position: absolute; width: 11px; height: 11px; color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.blueprint > .corner::before, .blueprint > .corner::after { content: ""; position: absolute; background: currentColor; }
+.blueprint > .corner::before { left: 5px; top: 0; width: 1px; height: 100%; }
+.blueprint > .corner::after { top: 5px; left: 0; width: 100%; height: 1px; }
+.blueprint > .corner.tl { top: -6px; left: -6px; }
+.blueprint > .corner.tr { top: -6px; right: -6px; }
+.blueprint > .corner.bl { bottom: -6px; left: -6px; }
+.blueprint > .corner.br { bottom: -6px; right: -6px; }
+
+.card { display: flex; flex-direction: column; gap: 6px; padding: 12px; background: transparent; border: 1px solid var(--color-divider); }
+.card-title { font-family: var(--font-heading); font-weight: 600; font-size: 17px; }
+.card-meta { font-size: 11px; color: color-mix(in srgb, var(--color-text) 50%, transparent); display: flex; gap: 6px; align-items: center; }
+
+.tag { display: inline-flex; align-items: center; font-size: 11px; padding: 3px 10px; border-radius: 3px; }
+.tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-family: var(--font-heading); font-weight: 600; font-size: 14px; border: 1px solid var(--color-divider); border-radius: 0; padding: 8px 14px; background: transparent; color: var(--color-text); }
+.btn-primary { background: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent); }
+.btn-primary:hover { background: var(--color-accent-600); }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.field label { display: block; font-size: 12px; margin-bottom: 5px; color: color-mix(in srgb, var(--color-text) 70%, transparent); }
+.input { width: 100%; min-height: 36px; padding: 6px 10px; font: inherit; font-size: 14px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--radius-md); }
+
+.seg { display: inline-flex; border: 1px solid var(--color-divider); border-radius: var(--radius-md); overflow: hidden; }
+.seg-opt { padding: 7px 12px; font-size: 13px; cursor: pointer; border: none; background: transparent; color: var(--color-text); font-family: var(--font-body); }
+.seg-opt.active { background: var(--color-accent); color: var(--color-bg); }
+.seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
