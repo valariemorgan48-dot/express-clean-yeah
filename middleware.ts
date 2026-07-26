@@ -1,5 +1,4 @@
-export { default } from "next-auth/middleware";
-
-export const config = {
-  matcher: ["/employee/:path*", "/manager/:path*"],
-};
+// Route protection is handled per-layout via getServerSession instead of
+// edge middleware, avoiding next-auth's edge-runtime middleware helper
+// (which has caused Vercel Edge Function build issues).
+export {};
