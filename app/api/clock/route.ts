@@ -3,20 +3,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET: current open time entry for the signed-in employee.
 export async function GET() {
   const session = await getServerSession(authOptions);
   const employeeId = (session?.user as any)?.employeeId;
   if (!employeeId) return NextResponse.json({ error: "Not an employee" }, { status: 403 });
 
-  const open = await prisma.timeEntry.findFirst({
-    where: { employeeId, clockOut: null },
-    orderBy: { clockIn: "desc" },
-  });
-  return NextResponse.json({ open });
+  const [open, employee] = await Promise.all([
+    prisma.timeEntry.findFirst({ where: { employeeId, clockOut: null }, orderBy: { clockIn: "desc" } }),
+    prisma.employee.findUnique({ where: { id: employeeId } }),
+  ]);
+  return NextResponse.json({ open, defaultJobType: employee?.jobType });
 }
 
-// POST: toggle clock in/out for the signed-in employee.
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const employeeId = (session?.user as any)?.employeeId;
