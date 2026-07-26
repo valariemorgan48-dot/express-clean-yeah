@@ -25,14 +25,18 @@ export default function EmployeeTimeOff() {
       setError("Start and end date are required.");
       return;
     }
-    const res = await fetch("/api/timeoff", { method: "POST", body: JSON.stringify(form) });
-    if (!res.ok) {
-      const d = await res.json();
-      setError(d.error || "Could not submit request");
-      return;
+    try {
+      const res = await fetch("/api/timeoff", { method: "POST", body: JSON.stringify(form) });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error || `Could not submit request (status ${res.status})`);
+        return;
+      }
+      setForm({ startDate: "", endDate: "", reason: "" });
+      refresh();
+    } catch (err: any) {
+      setError(err?.message || "Network error submitting request");
     }
-    setForm({ startDate: "", endDate: "", reason: "" });
-    refresh();
   }
 
   return (
