@@ -116,3 +116,12 @@ model WeeklyBonus {
 
   @@unique([employeeId, weekStart])
 }
+model WeekApproval {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  weekStart  DateTime
+  approvedAt DateTime @default(now())
+
+  @@unique([employeeId, weekStart])
+}
