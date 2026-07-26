@@ -33,6 +33,8 @@ hourlyRate Float    @default(0)
   shifts     Shift[]
   templates  RecurringTemplate[]
 timeOffRequests TimeOffRequest[]
+jobRates   JobRate[]
+  weeklyBonuses WeeklyBonus[]
   createdAt  DateTime @default(now())
 }
 
@@ -90,4 +92,26 @@ model TimeOffRequest {
   reason     String?
   status     RequestStatus @default(PENDING)
   createdAt  DateTime      @default(now())
+}
+model JobRate {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  jobType    String
+  rate       Float
+  createdAt  DateTime @default(now())
+
+  @@unique([employeeId, jobType])
+}
+
+model WeeklyBonus {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  weekStart  DateTime
+  amount     Float
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@unique([employeeId, weekStart])
 }
