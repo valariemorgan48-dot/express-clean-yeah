@@ -2,15 +2,19 @@
 import { useEffect, useState } from "react";
 import BlueprintCard from "@/components/BlueprintCard";
 
+const JOB_TYPES = ["Residential Cleaning", "Commercial Cleaning", "Local Moving", "Long-Distance Moving", "Lawn Care"];
+
 export default function EmployeeHome() {
   const [open, setOpen] = useState<any>(null);
   const [elapsed, setElapsed] = useState("00:00:00");
   const [loading, setLoading] = useState(false);
+  const [jobType, setJobType] = useState(JOB_TYPES[0]);
 
   async function refresh() {
     const res = await fetch("/api/clock");
     const data = await res.json();
     setOpen(data.open ?? null);
+    if (data.defaultJobType) setJobType(data.defaultJobType);
   }
 
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function EmployeeHome() {
 
   async function toggleClock() {
     setLoading(true);
-    const res = await fetch("/api/clock", { method: "POST", body: JSON.stringify({}) });
+    const res = await fetch("/api/clock", { method: "POST", body: JSON.stringify({ jobType }) });
     const data = await res.json();
     setOpen(data.clockedIn ? data.entry : null);
     setLoading(false);
@@ -49,8 +53,18 @@ export default function EmployeeHome() {
         <h6 style={{ opacity: 0.85, color: "var(--color-bg)" }}>{open ? "Currently clocked in" : "Not clocked in"}</h6>
         <div style={{ fontFamily: "var(--font-heading)", fontSize: 44, fontWeight: 600, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{elapsed}</div>
         <div style={{ fontSize: 13, marginTop: 4, opacity: 0.9 }}>
-          {open ? "On the clock" : "Tap below when you arrive on site"}
+          {open ? `On the clock — ${open.jobType || jobType}` : "Select a job and tap below when you arrive on site"}
         </div>
+        {!open && (
+          <select
+            className="input"
+            value={jobType}
+            onChange={(e) => setJobType(e.target.value)}
+            style={{ marginTop: 12, background: "var(--color-bg)", color: "var(--color-text)" }}
+          >
+            {JOB_TYPES.map((j) => <option key={j} value={j}>{j}</option>)}
+          </select>
+        )}
         <button
           onClick={toggleClock}
           disabled={loading}
