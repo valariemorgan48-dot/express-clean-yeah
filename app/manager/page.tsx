@@ -2,21 +2,48 @@
 import { useEffect, useState } from "react";
 import BlueprintCard from "@/components/BlueprintCard";
 
+const JOB_TYPES = ["Residential Cleaning", "Commercial Cleaning", "Local Moving", "Long-Distance Moving", "Lawn Care"];
+
 export default function ManagerHome() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [weekLabel, setWeekLabel] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", jobType: JOB_TYPES[0], email: "", password: "" });
+  const [error, setError] = useState("");
+
+  async function refresh() {
+    const r = await fetch("/api/employees");
+    const d = await r.json();
+    setEmployees(d.employees ?? []);
+    if (d.weekStart) {
+      const fmt = (s: string) => new Date(s).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+      setWeekLabel(`Work week: ${fmt(d.weekStart)} – ${fmt(d.weekEnd)}`);
+    }
+  }
 
   useEffect(() => {
-    fetch("/api/employees")
-      .then((r) => r.json())
-      .then((d) => {
-        setEmployees(d.employees ?? []);
-        if (d.weekStart) {
-          const fmt = (s: string) => new Date(s).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-          setWeekLabel(`Work week: ${fmt(d.weekStart)} – ${fmt(d.weekEnd)}`);
-        }
-      });
+    refresh();
   }, []);
+
+  async function addEmployee() {
+    setError("");
+    if (!form.name || !form.email || !form.password) return;
+    const res = await fetch("/api/employees", { method: "POST", body: JSON.stringify(form) });
+    if (!res.ok) {
+      const d = await res.json();
+      setError(d.error || "Could not add employee");
+      return;
+    }
+    setForm({ name: "", jobType: JOB_TYPES[0], email: "", password: "" });
+    setShowForm(false);
+    refresh();
+  }
+
+  async function removeEmployee(id: string) {
+    if (!confirm("Remove this employee? This deletes their login and history.")) return;
+    await fetch(`/api/employees?id=${id}`, { method: "DELETE" });
+    refresh();
+  }
 
   const onClock = employees.filter((e) => e.isClockedInNow).length;
 
@@ -36,7 +63,38 @@ export default function ManagerHome() {
         </BlueprintCard>
       </div>
 
-      <h6 style={{ margin: "20px 0 10px" }}>Hours this week</h6>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "20px 0 10px" }}>
+        <h6 style={{ margin: 0 }}>Hours this week</h6>
+        <button className="btn btn-primary" style={{ fontSize: 12, padding: "6px 10px" }} onClick={() => setShowForm(!showForm)}>
+          {showForm ? "Cancel" : "+ Add Employee"}
+        </button>
+      </div>
+
+      {showForm && (
+        <BlueprintCard style={{ marginBottom: 12, gap: 8 }}>
+          <div className="field">
+            <label>Name</label>
+            <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" />
+          </div>
+          <div className="field">
+            <label>Job type</label>
+            <select className="input" value={form.jobType} onChange={(e) => setForm({ ...form, jobType: e.target.value })}>
+              {JOB_TYPES.map((j) => <option key={j} value={j}>{j}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Login email</label>
+            <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@expresssolutions.com" />
+          </div>
+          <div className="field">
+            <label>Temporary password</label>
+            <input className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" />
+          </div>
+          {error && <div style={{ color: "#a33", fontSize: 13 }}>{error}</div>}
+          <button className="btn btn-primary btn-block" onClick={addEmployee}>Add Employee</button>
+        </BlueprintCard>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {employees.map((e) => (
           <BlueprintCard key={e.id} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -47,7 +105,10 @@ export default function ManagerHome() {
                 <div className="card-meta">{e.jobType}</div>
               </div>
             </div>
-            <div className="tag tag-accent">{e.weeklyHours} hrs</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="tag tag-accent">{e.weeklyHours} hrs</div>
+              <button onClick={() => removeEmployee(e.id)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>Remove</button>
+            </div>
           </BlueprintCard>
         ))}
       </div>
