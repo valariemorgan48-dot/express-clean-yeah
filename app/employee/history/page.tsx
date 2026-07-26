@@ -25,6 +25,7 @@ export default function EmployeeHistory() {
             {w.bonus && (
               <div className="card-meta">+ ${w.bonus.amount.toFixed(2)} bonus{w.bonus.note ? ` (${w.bonus.note})` : ""}</div>
             )}
+            {w.approved && <div className="card-meta" style={{ color: "var(--color-accent-700)" }}>✓ Approved</div>}
           </BlueprintCard>
         ))}
       </div>
