@@ -3,12 +3,40 @@ import { useEffect, useState } from "react";
 import BlueprintCard from "@/components/BlueprintCard";
 
 const JOB_TYPES = ["Residential Cleaning", "Commercial Cleaning", "Local Moving", "Long-Distance Moving", "Lawn Care"];
+const CLOCK_IN_MESSAGES = [
+  "You're clocked in! Now go be great!",
+  "Let's do this — have a great shift!",
+  "Clocked in and ready to roll!",
+  "You've got this. Make it a great one!",
+  "Time to shine — clocked in!",
+];
+const CONFETTI_COLORS = ["#3ea55c", "#7ed69a", "#a9e8bd", "#edf1ed", "#35934f"];
+
+function ConfettiPiece({ i }: { i: number }) {
+  const left = Math.random() * 100;
+  const delay = Math.random() * 0.4;
+  const duration = 1.8 + Math.random() * 1.2;
+  const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+  return (
+    <div
+      className="confetti-piece"
+      style={{
+        left: `${left}%`,
+        background: color,
+        animationDelay: `${delay}s`,
+        animationDuration: `${duration}s`,
+      }}
+    />
+  );
+}
 
 export default function EmployeeHome() {
   const [open, setOpen] = useState<any>(null);
   const [elapsed, setElapsed] = useState("00:00:00");
   const [loading, setLoading] = useState(false);
   const [jobType, setJobType] = useState(JOB_TYPES[0]);
+  const [toast, setToast] = useState<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
 
   async function refresh() {
     const res = await fetch("/api/clock");
@@ -40,12 +68,28 @@ export default function EmployeeHome() {
     const data = await res.json();
     setOpen(data.clockedIn ? data.entry : null);
     setLoading(false);
+
+    if (data.clockedIn) {
+      setToast(CLOCK_IN_MESSAGES[Math.floor(Math.random() * CLOCK_IN_MESSAGES.length)]);
+      setTimeout(() => setToast(null), 3200);
+    } else {
+      setCelebrating(true);
+      setTimeout(() => setCelebrating(false), 2800);
+    }
   }
 
   const today = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div style={{ marginTop: 8 }}>
+      {toast && <div className="encourage-toast">{toast}</div>}
+      {celebrating && (
+        <div className="celebrate-overlay">
+          {Array.from({ length: 40 }).map((_, i) => <ConfettiPiece key={i} i={i} />)}
+          <div className="celebrate-text">Great work! 🎉</div>
+        </div>
+      )}
+
       <h6 style={{ color: "var(--color-accent-700)" }}>{today}</h6>
       <h3>Time Tracking</h3>
 
