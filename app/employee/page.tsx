@@ -12,6 +12,36 @@ const CLOCK_IN_MESSAGES = [
 ];
 const CONFETTI_COLORS = ["#3ea55c", "#7ed69a", "#a9e8bd", "#edf1ed", "#35934f"];
 
+const BIBLE_VERSES = [
+  { text: "Whatever you do, work heartily, as for the Lord and not for men.", ref: "Colossians 3:23" },
+  { text: "I can do all things through him who strengthens me.", ref: "Philippians 4:13" },
+  { text: "Commit your work to the Lord, and your plans will be established.", ref: "Proverbs 16:3" },
+  { text: "Let all that you do be done in love.", ref: "1 Corinthians 16:14" },
+  { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
+  { text: "Trust in the Lord with all your heart, and do not lean on your own understanding.", ref: "Proverbs 3:5" },
+  { text: "Have I not commanded you? Be strong and courageous. Do not be frightened, and do not be dismayed, for the Lord your God is with you wherever you go.", ref: "Joshua 1:9" },
+  { text: "And we know that for those who love God all things work together for good, for those who are called according to his purpose.", ref: "Romans 8:28" },
+  { text: "She dresses herself with strength and makes her arms strong.", ref: "Proverbs 31:17" },
+  { text: "One who is faithful in a very little is also faithful in much.", ref: "Luke 16:10" },
+  { text: "The Lord will fight for you, and you have only to be silent.", ref: "Exodus 14:14" },
+  { text: "This is the day that the Lord has made; let us rejoice and be glad in it.", ref: "Psalm 118:24" },
+  { text: "But they who wait for the Lord shall renew their strength.", ref: "Isaiah 40:31" },
+  { text: "Give thanks in all circumstances; for this is the will of God in Christ Jesus for you.", ref: "1 Thessalonians 5:18" },
+  { text: "Do your best to present yourself to God as one approved, a worker who has no need to be ashamed.", ref: "2 Timothy 2:15" },
+  { text: "Not by might, nor by power, but by my Spirit, says the Lord of hosts.", ref: "Zechariah 4:6" },
+  { text: "In all your ways acknowledge him, and he will make straight your paths.", ref: "Proverbs 3:6" },
+  { text: "The Lord is good, a stronghold in the day of trouble; he knows those who take refuge in him.", ref: "Nahum 1:7" },
+  { text: "Casting all your anxieties on him, because he cares for you.", ref: "1 Peter 5:7" },
+  { text: "Every good gift and every perfect gift is from above.", ref: "James 1:17" },
+];
+
+function getDailyVerse() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86400000);
+  return BIBLE_VERSES[dayOfYear % BIBLE_VERSES.length];
+}
+
 function ConfettiPiece({ i }: { i: number }) {
   const left = Math.random() * 100;
   const delay = Math.random() * 0.4;
@@ -79,6 +109,7 @@ export default function EmployeeHome() {
   }
 
   const today = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+  const verse = getDailyVerse();
 
   return (
     <div style={{ marginTop: 8 }}>
@@ -92,6 +123,12 @@ export default function EmployeeHome() {
 
       <h6 style={{ color: "var(--color-accent-700)" }}>{today}</h6>
       <h3>Time Tracking</h3>
+
+      <BlueprintCard style={{ marginTop: 12, padding: 16 }}>
+        <div style={{ fontSize: 14, fontStyle: "italic", lineHeight: 1.5 }}>&ldquo;{verse.text}&rdquo;</div>
+        <div className="card-meta" style={{ marginTop: 6 }}>{verse.ref} (ESV)</div>
+        <div className="card-meta" style={{ fontSize: 10, opacity: 0.6, marginTop: 4 }}>Scripture quotations are from the ESV® Bible, copyright © 2001 by Crossway.</div>
+      </BlueprintCard>
 
       <BlueprintCard dark style={{ marginTop: 20, padding: 22 }}>
         <h6 style={{ opacity: 0.85, color: "var(--color-bg)" }}>{open ? "Currently clocked in" : "Not clocked in"}</h6>
