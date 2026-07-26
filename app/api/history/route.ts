@@ -14,6 +14,8 @@ export async function GET() {
   const entries = await prisma.timeEntry.findMany({
     where: { employeeId, clockIn: { gte: weeks[weeks.length - 1].start, lte: weeks[0].end } },
   });
+  const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
+  const hourlyRate = employee?.hourlyRate ?? 0;
 
   const now = Date.now();
   const history = weeks.map((w) => {
@@ -22,7 +24,8 @@ export async function GET() {
       const endMs = e.clockOut ? e.clockOut.getTime() : now;
       return sum + (endMs - e.clockIn.getTime());
     }, 0);
-    return { label: w.label, hours: Math.round((totalMs / 3_600_000) * 100) / 100 };
+    const hours = Math.round((totalMs / 3_600_000) * 100) / 100;
+    return { label: w.label, hours, hourlyRate, pay: Math.round(hours * hourlyRate * 100) / 100 };
   });
 
   return NextResponse.json({ history });
