@@ -95,7 +95,7 @@ export default function ManagerHome() {
             <label>Temporary password</label>
             <input className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" />
           </div>
-          {error && <div style={{ color: "#a33", fontSize: 13 }}>{error}</div>}
+          {error && <div style={{ color: "#ff6b6b", fontSize: 13 }}>{error}</div>}
           <button className="btn btn-primary btn-block" onClick={addEmployee}>Add Employee</button>
         </BlueprintCard>
       )}
