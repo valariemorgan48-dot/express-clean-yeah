@@ -35,6 +35,7 @@ hourlyRate Float    @default(0)
 timeOffRequests TimeOffRequest[]
 jobRates   JobRate[]
   weeklyBonuses WeeklyBonus[]
+weekApprovals WeekApproval[]
   createdAt  DateTime @default(now())
 }
 
