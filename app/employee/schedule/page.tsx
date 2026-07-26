@@ -1,15 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import BlueprintCard from "@/components/BlueprintCard";
 
 export default function EmployeeSchedule() {
+  const { data: session } = useSession();
   const [shifts, setShifts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/shifts")
+    const employeeId = (session?.user as any)?.employeeId;
+    if (!employeeId) return;
+    fetch(`/api/shifts?employeeId=${employeeId}`)
       .then((r) => r.json())
       .then((d) => setShifts(d.shifts ?? []));
-  }, []);
+  }, [session]);
 
   return (
     <div style={{ marginTop: 8 }}>
