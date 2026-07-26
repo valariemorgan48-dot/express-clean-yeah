@@ -10,6 +10,8 @@ export default function ManagerHome() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", jobType: JOB_TYPES[0], email: "", password: "", hourlyRate: "" });
   const [error, setError] = useState("");
+  const [ratesOpenId, setRatesOpenId] = useState<string | null>(null);
+  const [rateDrafts, setRateDrafts] = useState<Record<string, { base: string; jobRates: Record<string, string> }>>({});
 
   async function refresh() {
     const r = await fetch("/api/employees");
@@ -50,20 +52,36 @@ export default function ManagerHome() {
     refresh();
   }
 
-  async function editRate(e: any) {
-    const input = prompt(`New hourly rate for ${e.name}:`, e.hourlyRate);
-    if (input === null) return;
-    const rate = Number(input);
-    if (isNaN(rate) || rate < 0) {
-      alert("Enter a valid non-negative number.");
+  function toggleRates(e: any) {
+    if (ratesOpenId === e.id) {
+      setRatesOpenId(null);
       return;
     }
-    const res = await fetch("/api/employees", { method: "PATCH", body: JSON.stringify({ id: e.id, hourlyRate: rate }) });
+    const jobRates: Record<string, string> = {};
+    for (const j of JOB_TYPES) jobRates[j] = e.jobRates?.[j] !== undefined ? String(e.jobRates[j]) : "";
+    setRateDrafts({ ...rateDrafts, [e.id]: { base: String(e.hourlyRate), jobRates } });
+    setRatesOpenId(e.id);
+  }
+
+  function updateDraftBase(id: string, value: string) {
+    setRateDrafts((d) => ({ ...d, [id]: { ...d[id], base: value } }));
+  }
+  function updateDraftJobRate(id: string, jobType: string, value: string) {
+    setRateDrafts((d) => ({ ...d, [id]: { ...d[id], jobRates: { ...d[id].jobRates, [jobType]: value } } }));
+  }
+
+  async function saveRates(id: string) {
+    const draft = rateDrafts[id];
+    const res = await fetch(`/api/employees/${id}/rates`, {
+      method: "PUT",
+      body: JSON.stringify({ hourlyRate: draft.base, jobRates: draft.jobRates }),
+    });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      alert(d.error || "Could not update rate");
+      alert(d.error || "Could not save rates");
       return;
     }
+    setRatesOpenId(null);
     refresh();
   }
 
@@ -113,7 +131,7 @@ export default function ManagerHome() {
             <input className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" />
           </div>
           <div className="field">
-            <label>Hourly rate ($)</label>
+            <label>Base hourly rate ($)</label>
             <input className="input" type="number" min="0" step="0.01" value={form.hourlyRate} onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })} placeholder="e.g. 18.50" />
           </div>
           {error && <div style={{ color: "#ff6b6b", fontSize: 13 }}>{error}</div>}
@@ -123,19 +141,47 @@ export default function ManagerHome() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {employees.map((e) => (
-          <BlueprintCard key={e.id} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: e.isClockedInNow ? "var(--color-accent)" : "var(--color-neutral-400)" }} />
-              <div>
-                <div className="card-title" style={{ fontSize: 15 }}>{e.name}</div>
-                <div className="card-meta">{e.jobType}</div>
+          <BlueprintCard key={e.id} style={{ gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: e.isClockedInNow ? "var(--color-accent)" : "var(--color-neutral-400)" }} />
+                <div>
+                  <div className="card-title" style={{ fontSize: 15 }}>{e.name}</div>
+                  <div className="card-meta">{e.jobType}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="tag tag-accent">{e.weeklyHours} hrs</div>
+                <button onClick={() => toggleRates(e)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>Pay Rates</button>
+                <button onClick={() => removeEmployee(e.id)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>Remove</button>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div className="tag tag-accent">{e.weeklyHours} hrs</div>
-              <button onClick={() => editRate(e)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>${e.hourlyRate.toFixed(2)}/hr</button>
-              <button onClick={() => removeEmployee(e.id)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>Remove</button>
-            </div>
+
+            {ratesOpenId === e.id && rateDrafts[e.id] && (
+              <div style={{ borderTop: "1px solid var(--color-divider)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="field">
+                  <label>Base hourly rate ($)</label>
+                  <input className="input" type="number" min="0" step="0.01" value={rateDrafts[e.id].base} onChange={(ev) => updateDraftBase(e.id, ev.target.value)} />
+                </div>
+                <div className="card-meta">Per-job rate (optional — leave blank to use base rate)</div>
+                {JOB_TYPES.map((j) => (
+                  <div key={j} className="field" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <label style={{ flex: 1, marginBottom: 0 }}>{j}</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      style={{ flex: "0 0 110px" }}
+                      placeholder="base"
+                      value={rateDrafts[e.id].jobRates[j]}
+                      onChange={(ev) => updateDraftJobRate(e.id, j, ev.target.value)}
+                    />
+                  </div>
+                ))}
+                <button className="btn btn-primary btn-block" onClick={() => saveRates(e.id)}>Save Pay Rates</button>
+              </div>
+            )}
           </BlueprintCard>
         ))}
       </div>
