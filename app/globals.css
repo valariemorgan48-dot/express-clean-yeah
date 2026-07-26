@@ -71,3 +71,12 @@ button { font-family: inherit; }
 .seg-opt { padding: 7px 12px; font-size: 13px; cursor: pointer; border: none; background: transparent; color: var(--color-text); font-family: var(--font-body); }
 .seg-opt.active { background: var(--color-accent); color: var(--color-bg); }
 .seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
+.encourage-toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--color-accent); color: var(--color-bg); font-family: var(--font-heading); font-weight: 600; font-size: 14px; padding: 12px 20px; border: 1px solid var(--color-accent); box-shadow: 0 6px 20px rgba(0,0,0,0.35); animation: toast-in 0.25s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+.celebrate-overlay { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-bg) 88%, transparent); overflow: hidden; }
+.celebrate-text { font-family: var(--font-heading); font-size: 40px; font-weight: 600; color: var(--color-accent-700); z-index: 2; text-align: center; animation: celebrate-pop 0.4s ease-out; }
+@keyframes celebrate-pop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+.confetti-piece { position: absolute; top: -10px; width: 8px; height: 14px; opacity: 0.95; animation-name: confetti-fall; animation-timing-function: ease-in; animation-fill-mode: forwards; }
+@keyframes confetti-fall { from { transform: translateY(0) rotate(0deg); opacity: 1; } to { transform: translateY(110vh) rotate(540deg); opacity: 0.2; } }
