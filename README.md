@@ -1,4 +1,4 @@
-# Express Solutions — Time Tracker (production app)
+ # Express Solutions — Time Tracker (production app)
 
 Next.js 14 (App Router) + Prisma/Postgres + NextAuth rebuild of the Express Solutions time-tracking prototype. Preserves the Industry design system look (Barlow/Barlow Condensed, steel-blue blueprint cards) and all prototyped behavior: employee clock in/out, manager weekly-hours view, and weekly-recurring shift assignment, computed on the Friday 12:00 AM–Thursday 11:59:59 PM work week.
 
