@@ -21,6 +21,9 @@ export async function GET() {
   const bonuses = await prisma.weeklyBonus.findMany({
     where: { employeeId, weekStart: { in: weeks.map((w) => w.start) } },
   });
+  const approvals = await prisma.weekApproval.findMany({
+    where: { employeeId, weekStart: { in: weeks.map((w) => w.start) } },
+  });
 
   const now = Date.now();
   const history = weeks.map((w) => {
@@ -38,12 +41,14 @@ export async function GET() {
     pay = Math.round(pay * 100) / 100;
     const bonus = bonuses.find((b) => b.weekStart.getTime() === w.start.getTime());
     const total = Math.round((pay + (bonus?.amount ?? 0)) * 100) / 100;
+    const approved = approvals.some((a) => a.weekStart.getTime() === w.start.getTime());
     return {
       label: w.label,
       hours,
       pay,
       bonus: bonus ? { amount: bonus.amount, note: bonus.note } : null,
       total,
+      approved,
     };
   });
 
