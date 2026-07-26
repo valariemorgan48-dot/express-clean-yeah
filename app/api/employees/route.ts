@@ -32,6 +32,7 @@ export async function GET() {
       id: e.id,
       name: e.name,
       jobType: e.jobType,
+      hourlyRate: e.hourlyRate,
       weeklyHours: Math.round((totalMs / 3_600_000) * 100) / 100,
       isClockedInNow,
     };
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   if (!session || (session.user as any).role !== "MANAGER") {
     return NextResponse.json({ error: "Manager access required" }, { status: 403 });
   }
-  const { name, jobType, email, password } = await req.json();
+  const { name, jobType, email, password, hourlyRate } = await req.json();
   if (!name || !jobType || !email || !password) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -56,10 +57,24 @@ export async function POST(req: Request) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { email, passwordHash, name, role: "EMPLOYEE", employee: { create: { name, jobType } } },
+    data: { email, passwordHash, name, role: "EMPLOYEE", employee: { create: { name, jobType, hourlyRate: Number(hourlyRate) || 0 } } },
     include: { employee: true },
   });
   return NextResponse.json({ employee: user.employee });
+}
+
+// Manager updates an employee's hourly rate.
+export async function PATCH(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== "MANAGER") {
+    return NextResponse.json({ error: "Manager access required" }, { status: 403 });
+  }
+  const { id, hourlyRate } = await req.json();
+  if (!id || hourlyRate === undefined || isNaN(Number(hourlyRate))) {
+    return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
+  }
+  const employee = await prisma.employee.update({ where: { id }, data: { hourlyRate: Number(hourlyRate) } });
+  return NextResponse.json({ employee });
 }
 
 // Manager removes an employee (and their login).
