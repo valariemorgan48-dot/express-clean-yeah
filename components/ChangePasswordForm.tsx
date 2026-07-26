@@ -42,7 +42,7 @@ export default function ChangePasswordForm() {
             <label>New password</label>
             <input className="input" type="password" value={next} onChange={(e) => setNext(e.target.value)} />
           </div>
-          {message && <div style={{ fontSize: 13, color: message.ok ? "var(--color-accent-700)" : "#a33" }}>{message.text}</div>}
+          {message && <div style={{ fontSize: 13, color: message.ok ? "var(--color-accent-700)" : "#ff6b6b" }}>{message.text}</div>}
           <button className="btn btn-primary btn-block" onClick={submit}>Update Password</button>
         </BlueprintCard>
       )}
