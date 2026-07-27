@@ -70,9 +70,14 @@ export default function ManagerTimesheets() {
       setError("Clock-in time is required.");
       return;
     }
-    const payload = { employeeId, ...form };
+    const fixedForm = {
+      ...form,
+      clockIn: new Date(form.clockIn).toISOString(),
+      clockOut: form.clockOut ? new Date(form.clockOut).toISOString() : "",
+    };
+    const payload = { employeeId, ...fixedForm };
     const res = editingId
-      ? await fetch("/api/timeentries", { method: "PUT", body: JSON.stringify({ id: editingId, ...form }) })
+      ? await fetch("/api/timeentries", { method: "PUT", body: JSON.stringify({ id: editingId, ...fixedForm }) })
       : await fetch("/api/timeentries", { method: "POST", body: JSON.stringify(payload) });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
