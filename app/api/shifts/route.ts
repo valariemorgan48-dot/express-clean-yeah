@@ -4,8 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getWorkWeekBounds } from "@/lib/workweek";
 
-// Expands any active RecurringTemplate into a concrete Shift for the
-// current work week if one doesn't already exist for that template+week.
 async function ensureShiftsForCurrentWeek() {
   const { start } = getWorkWeekBounds();
   const templates = await prisma.recurringTemplate.findMany({ where: { active: true } });
@@ -61,13 +59,16 @@ export async function GET(req: Request) {
       employeeName: s.employee.name,
       jobType: s.jobType,
       address: s.address,
+      rate: s.rate,
       repeats: !!s.templateId,
     })),
   });
 }
 
-// Manager creates a shift. If `repeats` is true, also creates a
-// RecurringTemplate so future work weeks auto-generate the instance.
+function parseRate(rate: unknown) {
+  return rate !== undefined && rate !== null && rate !== "" && !isNaN(Number(rate)) ? Number(rate) : null;
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { employeeId, date, time, jobType, address, repeats } = body;
+  const { employeeId, date, time, jobType, address, repeats, rate } = body;
   if (!employeeId || !date || !time || !jobType || !address) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -89,32 +90,37 @@ export async function POST(req: Request) {
   }
 
   const shift = await prisma.shift.create({
-    data: { employeeId, date: new Date(date), time, jobType, address, templateId },
+    data: { employeeId, date: new Date(date), time, jobType, address, templateId, rate: repeats ? null : parseRate(rate) },
   });
 
   return NextResponse.json({ shift });
 }
 
-// Manager edits a single shift instance's details.
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
     return NextResponse.json({ error: "Manager access required" }, { status: 403 });
   }
   const body = await req.json();
-  const { id, employeeId, date, time, jobType, address } = body;
+  const { id, employeeId, date, time, jobType, address, rate } = body;
   if (!id || !employeeId || !date || !time || !jobType || !address) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
+  const existing = await prisma.shift.findUnique({ where: { id } });
   const shift = await prisma.shift.update({
     where: { id },
-    data: { employeeId, date: new Date(date), time, jobType, address },
+    data: {
+      employeeId,
+      date: new Date(date),
+      time,
+      jobType,
+      address,
+      ...(existing?.templateId ? {} : { rate: parseRate(rate) }),
+    },
   });
   return NextResponse.json({ shift });
 }
 
-// Manager deletes a shift. `series=true` also stops and removes all future
-// instances of its weekly recurrence (if it has one).
 export async function DELETE(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== "MANAGER") {
