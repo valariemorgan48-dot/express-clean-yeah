@@ -129,7 +129,7 @@ export default function ManagerSchedule() {
         {shifts.map((s) => (
           <BlueprintCard key={s.id}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <div className="card-title" style={{ fontSize: 15 }}>{new Date(s.date).toLocaleDateString([], { weekday: "short" })} · {s.time}</div>
+            <div className="card-title" style={{ fontSize: 15 }}>{new Date(s.date).toLocaleDateString([], { weekday: "short", timeZone: "UTC" })} · {s.time}</div>
               <div className="tag tag-accent">{s.employeeName}</div>
             </div>
             <div className="card-meta">{s.jobType} — {s.address}</div>
