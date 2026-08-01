@@ -102,6 +102,17 @@ export default function ManagerHome() {
     refresh();
   }
 
+  async function resetPassword(id: string) {
+    if (!confirm("Reset this employee's password? Their current password will stop working.")) return;
+    const res = await fetch(`/api/employees/${id}/reset-password`, { method: "POST" });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(d.error || "Could not reset password");
+      return;
+    }
+    alert(`New temporary password: ${d.tempPassword}\n\nShare this with the employee — it won't be shown again.`);
+  }
+
   const onClock = employees.filter((e) => e.isClockedInNow).length;
 
   return (
@@ -197,6 +208,8 @@ export default function ManagerHome() {
                   <label>Base hourly rate ($)</label>
                   <input className="input" type="number" min="0" step="0.01" value={rateDrafts[e.id].base} onChange={(ev) => updateDraftBase(e.id, ev.target.value)} />
                 </div>
+                {e.email && <div className="card-meta">Login: {e.email}</div>}
+                <button className="btn btn-block" onClick={() => resetPassword(e.id)}>Reset Password</button>
                 <div className="card-meta">Per-job rate (optional — leave blank to use base rate)</div>
                 {JOB_TYPES.map((j) => (
                   <div key={j} className="field" style={{ display: "flex", alignItems: "center", gap: 8 }}>
