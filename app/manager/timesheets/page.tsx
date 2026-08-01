@@ -20,8 +20,9 @@ export default function ManagerTimesheets() {
   const [entries, setEntries] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ clockIn: "", clockOut: "", jobType: JOB_TYPES[0], address: "" });
+  const [form, setForm] = useState({ clockIn: "", clockOut: "", jobType: JOB_TYPES[0], address: "", rate: "" });
   const [error, setError] = useState("");
+  const [approved, setApproved] = useState(false);
 
   useEffect(() => {
     fetch("/api/employees")
@@ -35,9 +36,15 @@ export default function ManagerTimesheets() {
 
   async function refresh() {
     if (!employeeId) return;
-    const r = await fetch(`/api/timeentries?employeeId=${employeeId}&weekStart=${weeks[weekIdx].start.toISOString()}`);
+    const weekStartISO = weeks[weekIdx].start.toISOString();
+    const [r, summaryRes] = await Promise.all([
+      fetch(`/api/timeentries?employeeId=${employeeId}&weekStart=${weekStartISO}`),
+      fetch(`/api/payroll/summary?start=${weekStartISO}`),
+    ]);
     const d = await r.json();
+    const summaryData = await summaryRes.json();
     setEntries(d.entries ?? []);
+    setApproved((summaryData.summary ?? []).find((s: any) => s.id === employeeId)?.approved ?? false);
   }
 
   useEffect(() => {
@@ -47,7 +54,7 @@ export default function ManagerTimesheets() {
 
   function startAdd() {
     setEditingId(null);
-    setForm({ clockIn: "", clockOut: "", jobType: JOB_TYPES[0], address: "" });
+    setForm({ clockIn: "", clockOut: "", jobType: JOB_TYPES[0], address: "", rate: "" });
     setError("");
     setShowForm(true);
   }
@@ -59,6 +66,7 @@ export default function ManagerTimesheets() {
       clockOut: toLocalInput(e.clockOut),
       jobType: e.jobType || JOB_TYPES[0],
       address: e.address || "",
+      rate: e.rate !== null && e.rate !== undefined ? String(e.rate) : "",
     });
     setError("");
     setShowForm(true);
@@ -95,6 +103,18 @@ export default function ManagerTimesheets() {
     refresh();
   }
 
+  const weekStartISO = weeks[weekIdx].start.toISOString();
+
+  async function toggleApproval() {
+    if (approved) {
+      if (!confirm("Remove approval for this employee's hours this week?")) return;
+      await fetch(`/api/approvals?employeeId=${employeeId}&weekStart=${weekStartISO}`, { method: "DELETE" });
+    } else {
+      await fetch("/api/approvals", { method: "POST", body: JSON.stringify({ employeeId, weekStart: weekStartISO }) });
+    }
+    refresh();
+  }
+
   return (
     <div style={{ marginTop: 8 }}>
       <h3>Timesheets</h3>
@@ -115,6 +135,13 @@ export default function ManagerTimesheets() {
             ))}
           </select>
         </div>
+      </BlueprintCard>
+
+      <BlueprintCard style={{ marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="card-meta" style={{ fontSize: 13 }}>{approved ? "✓ Hours approved for this week" : "Hours not yet approved for this week"}</div>
+        <button className={approved ? "btn" : "btn btn-primary"} style={{ fontSize: 12, padding: "6px 10px" }} onClick={toggleApproval}>
+          {approved ? "Approved — undo" : "Approve Hours"}
+        </button>
       </BlueprintCard>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "16px 0 10px" }}>
@@ -143,6 +170,10 @@ export default function ManagerTimesheets() {
           <div className="field">
             <label>Address (optional)</label>
             <input className="input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Street address" />
+          </div>
+          <div className="field">
+            <label>Pay rate for this entry ($/hr, optional override)</label>
+            <input className="input" type="number" min="0" step="0.01" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} placeholder="Leave blank to use employee's normal rate" />
           </div>
           {error && <div style={{ color: "#ff6b6b", fontSize: 13 }}>{error}</div>}
           <button className="btn btn-primary btn-block" onClick={submit}>{editingId ? "Save Changes" : "Add Entry"}</button>
