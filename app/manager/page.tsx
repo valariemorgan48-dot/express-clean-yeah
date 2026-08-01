@@ -12,14 +12,31 @@ export default function ManagerHome() {
   const [error, setError] = useState("");
   const [ratesOpenId, setRatesOpenId] = useState<string | null>(null);
   const [rateDrafts, setRateDrafts] = useState<Record<string, { base: string; jobRates: Record<string, string> }>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [entriesById, setEntriesById] = useState<Record<string, any[]>>({});
+  const [weekStartISO, setWeekStartISO] = useState("");
 
   async function refresh() {
     const r = await fetch("/api/employees");
     const d = await r.json();
     setEmployees(d.employees ?? []);
     if (d.weekStart) {
+      setWeekStartISO(d.weekStart);
       const fmt = (s: string) => new Date(s).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
       setWeekLabel(`Work week: ${fmt(d.weekStart)} – ${fmt(d.weekEnd)}`);
+    }
+  }
+
+  async function toggleExpand(id: string) {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    if (!entriesById[id]) {
+      const r = await fetch(`/api/timeentries?employeeId=${id}&weekStart=${weekStartISO}`);
+      const d = await r.json();
+      setEntriesById((prev) => ({ ...prev, [id]: d.entries ?? [] }));
     }
   }
 
@@ -143,7 +160,7 @@ export default function ManagerHome() {
         {employees.map((e) => (
           <BlueprintCard key={e.id} style={{ gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div onClick={() => toggleExpand(e.id)} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: e.isClockedInNow ? "var(--color-accent)" : "var(--color-neutral-400)" }} />
                 <div>
                   <div className="card-title" style={{ fontSize: 15 }}>{e.name}</div>
@@ -156,6 +173,23 @@ export default function ManagerHome() {
                 <button onClick={() => removeEmployee(e.id)} className="btn" style={{ fontSize: 11, padding: "4px 8px" }}>Remove</button>
               </div>
             </div>
+
+            {expandedId === e.id && (
+              <div style={{ borderTop: "1px solid var(--color-divider)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                <div className="card-meta">Shifts worked this week</div>
+                {(entriesById[e.id] ?? []).map((entry) => (
+                  <div key={entry.id} style={{ fontSize: 13, display: "flex", justifyContent: "space-between" }}>
+                    <span>
+                      {new Date(entry.clockIn).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}
+                      {" – "}
+                      {entry.clockOut ? new Date(entry.clockOut).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "still clocked in"}
+                    </span>
+                    <span style={{ opacity: 0.7 }}>{entry.jobType || "—"}</span>
+                  </div>
+                ))}
+                {(entriesById[e.id] ?? []).length === 0 && <div style={{ fontSize: 13, opacity: 0.6 }}>No shifts worked yet this week.</div>}
+              </div>
+            )}
 
             {ratesOpenId === e.id && rateDrafts[e.id] && (
               <div style={{ borderTop: "1px solid var(--color-divider)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
