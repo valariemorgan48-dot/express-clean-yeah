@@ -23,6 +23,7 @@ export async function GET(req: Request) {
     orderBy: { name: "asc" },
   });
   const bonuses = await prisma.weeklyBonus.findMany({ where: { weekStart: start } });
+  const approvals = await prisma.weekApproval.findMany({ where: { weekStart: start } });
 
   const now = Date.now();
   const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
       const endMs = t.clockOut ? t.clockOut.getTime() : now;
       const ms = endMs - t.clockIn.getTime();
       totalMs += ms;
-      const rate = resolveRate(t.jobType, e.hourlyRate, e.jobRates);
+      const rate = resolveRate(t.jobType, e.hourlyRate, e.jobRates, t.rate);
       pay += (ms / 3_600_000) * rate;
     }
     const hours = Math.round((totalMs / 3_600_000) * 100) / 100;
@@ -43,12 +44,13 @@ export async function GET(req: Request) {
     const bonus = bonuses.find((b) => b.employeeId === e.id);
     const bonusAmount = bonus?.amount ?? 0;
     const total = Math.round((pay + bonusAmount) * 100) / 100;
-    return [e.name, e.jobType, weekLabel, hours.toFixed(2), pay.toFixed(2), bonusAmount.toFixed(2), total.toFixed(2)];
+    const approved = approvals.some((a) => a.employeeId === e.id) ? "Yes" : "No";
+    return [e.name, e.jobType, weekLabel, hours.toFixed(2), pay.toFixed(2), bonusAmount.toFixed(2), total.toFixed(2), approved];
   });
 
   const csvEscape = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
   const lines = [
-    ["Employee", "Job Type", "Work Week", "Hours", "Pay", "Bonus", "Total"].map(csvEscape).join(","),
+    ["Employee", "Job Type", "Work Week", "Hours", "Pay", "Bonus", "Total", "Approved"].map(csvEscape).join(","),
     ...rows.map((r) => r.map((v) => csvEscape(String(v))).join(",")),
   ];
   const csv = lines.join("\n");
