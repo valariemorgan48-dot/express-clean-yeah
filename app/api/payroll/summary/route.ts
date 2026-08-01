@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       const endMs = t.clockOut ? t.clockOut.getTime() : now;
       const ms = endMs - t.clockIn.getTime();
       totalMs += ms;
-      const rate = resolveRate(t.jobType, e.hourlyRate, e.jobRates);
+      const rate = resolveRate(t.jobType, e.hourlyRate, e.jobRates, t.rate);
       pay += (ms / 3_600_000) * rate;
     }
     const hours = Math.round((totalMs / 3_600_000) * 100) / 100;
