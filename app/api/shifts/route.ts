@@ -39,7 +39,8 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const employeeId = searchParams.get("employeeId");
-  const { start, end } = getWorkWeekBounds();
+  const startParam = searchParams.get("start");
+  const { start, end } = getWorkWeekBounds(startParam ? new Date(startParam) : new Date());
 
   const shifts = await prisma.shift.findMany({
     where: {
