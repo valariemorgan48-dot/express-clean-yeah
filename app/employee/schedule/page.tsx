@@ -22,7 +22,7 @@ export default function EmployeeSchedule() {
         {shifts.map((s) => (
           <BlueprintCard key={s.id}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <div className="card-title">{new Date(s.date).toLocaleDateString([], { weekday: "short" })}</div>
+             <div className="card-title">{new Date(s.date).toLocaleDateString([], { weekday: "short", timeZone: "UTC" })}</div>
               <div className="tag tag-accent">{s.time}</div>
             </div>
             <div style={{ fontSize: 13, opacity: 0.8 }}>{s.jobType}</div>
