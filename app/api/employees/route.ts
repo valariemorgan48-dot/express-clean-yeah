@@ -16,6 +16,7 @@ export async function GET() {
     include: {
       timeEntries: { where: { clockIn: { gte: start, lte: end } } },
       jobRates: true,
+      user: true,
     },
     orderBy: { name: "asc" },
   });
@@ -35,6 +36,7 @@ export async function GET() {
       jobType: e.jobType,
       hourlyRate: e.hourlyRate,
       jobRates,
+      email: e.user?.email ?? null,
       weeklyHours: Math.round((totalMs / 3_600_000) * 100) / 100,
       isClockedInNow,
     };
@@ -91,6 +93,10 @@ export async function DELETE(req: Request) {
   await prisma.timeEntry.deleteMany({ where: { employeeId: id } });
   await prisma.shift.deleteMany({ where: { employeeId: id } });
   await prisma.recurringTemplate.deleteMany({ where: { employeeId: id } });
+  await prisma.jobRate.deleteMany({ where: { employeeId: id } });
+  await prisma.weeklyBonus.deleteMany({ where: { employeeId: id } });
+  await prisma.weekApproval.deleteMany({ where: { employeeId: id } });
+  await prisma.timeOffRequest.deleteMany({ where: { employeeId: id } });
   await prisma.employee.delete({ where: { id } });
   if (employee.userId) await prisma.user.delete({ where: { id: employee.userId } });
 
