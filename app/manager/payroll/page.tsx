@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import BlueprintCard from "@/components/BlueprintCard";
 import { getPastWorkWeeks } from "@/lib/workweek";
 
@@ -10,21 +11,25 @@ export default function ManagerPayroll() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [bonuses, setBonuses] = useState<Record<string, { amount: number; note: string | null }>>({});
   const [drafts, setDrafts] = useState<Record<string, { amount: string; note: string }>>({});
+  const [unapproved, setUnapproved] = useState<string[]>([]);
 
   const weekStartISO = weeks[selected].start.toISOString();
 
   async function refresh() {
-    const [empRes, bonusRes] = await Promise.all([
+    const [empRes, bonusRes, summaryRes] = await Promise.all([
       fetch("/api/employees"),
       fetch(`/api/bonuses?weekStart=${weekStartISO}`),
+      fetch(`/api/payroll/summary?start=${weekStartISO}`),
     ]);
     const empData = await empRes.json();
     const bonusData = await bonusRes.json();
+    const summaryData = await summaryRes.json();
     setEmployees(empData.employees ?? []);
     const map: Record<string, { amount: number; note: string | null }> = {};
     for (const b of bonusData.bonuses ?? []) map[b.employeeId] = { amount: b.amount, note: b.note };
     setBonuses(map);
     setDrafts({});
+    setUnapproved((summaryData.summary ?? []).filter((s: any) => !s.approved).map((s: any) => s.name));
   }
 
   useEffect(() => {
@@ -59,6 +64,12 @@ export default function ManagerPayroll() {
             ))}
           </select>
         </div>
+        {unapproved.length > 0 && (
+          <div style={{ fontSize: 13, color: "#ff6b6b", border: "1px solid #ff6b6b", borderRadius: 4, padding: 10 }}>
+            {unapproved.length} employee{unapproved.length > 1 ? "s" : ""} not yet approved for this week: {unapproved.join(", ")}.
+            {" "}<Link href="/manager/approvals" style={{ color: "#ff6b6b", textDecoration: "underline" }}>Go approve hours</Link> before exporting.
+          </div>
+        )}
         <a className="btn btn-primary btn-block" style={{ textDecoration: "none" }} href={`/api/payroll/export?start=${weekStartISO}`}>
           Download CSV
         </a>
