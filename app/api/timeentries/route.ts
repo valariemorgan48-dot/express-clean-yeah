@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   if (!session || (session.user as any).role !== "MANAGER") {
     return NextResponse.json({ error: "Manager access required" }, { status: 403 });
   }
-  const { employeeId, clockIn, clockOut, jobType, address } = await req.json();
+  const { employeeId, clockIn, clockOut, jobType, address, rate } = await req.json();
   if (!employeeId || !clockIn) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
   const entry = await prisma.timeEntry.create({
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       clockOut: clockOut ? new Date(clockOut) : null,
       jobType: jobType || null,
       address: address || null,
+      rate: rate !== undefined && rate !== "" && !isNaN(Number(rate)) ? Number(rate) : null,
     },
   });
   return NextResponse.json({ entry });
@@ -50,7 +51,7 @@ export async function PUT(req: Request) {
   if (!session || (session.user as any).role !== "MANAGER") {
     return NextResponse.json({ error: "Manager access required" }, { status: 403 });
   }
-  const { id, clockIn, clockOut, jobType, address } = await req.json();
+  const { id, clockIn, clockOut, jobType, address, rate } = await req.json();
   if (!id || !clockIn) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
   const entry = await prisma.timeEntry.update({
@@ -60,6 +61,7 @@ export async function PUT(req: Request) {
       clockOut: clockOut ? new Date(clockOut) : null,
       jobType: jobType || null,
       address: address || null,
+      rate: rate !== undefined && rate !== "" && !isNaN(Number(rate)) ? Number(rate) : null,
     },
   });
   return NextResponse.json({ entry });
