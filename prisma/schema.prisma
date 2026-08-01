@@ -26,16 +26,16 @@ model Employee {
   id         String   @id @default(cuid())
   name       String
   jobType    String
-hourlyRate Float    @default(0)
+  hourlyRate Float    @default(0)
   userId     String?  @unique
   user       User?    @relation(fields: [userId], references: [id])
   timeEntries TimeEntry[]
   shifts     Shift[]
   templates  RecurringTemplate[]
-timeOffRequests TimeOffRequest[]
-jobRates   JobRate[]
+  timeOffRequests TimeOffRequest[]
+  jobRates   JobRate[]
   weeklyBonuses WeeklyBonus[]
-weekApprovals WeekApproval[]
+  weekApprovals WeekApproval[]
   createdAt  DateTime @default(now())
 }
 
@@ -47,30 +47,29 @@ model TimeEntry {
   clockOut   DateTime?
   jobType    String?
   address    String?
+  rate       Float?
   createdAt  DateTime  @default(now())
 }
 
-// A concrete, dated shift instance shown on the schedule.
 model Shift {
   id          String    @id @default(cuid())
   employeeId  String
   employee    Employee  @relation(fields: [employeeId], references: [id])
-  date        DateTime  // the calendar date of the shift
-  time        String    // e.g. "9:00 AM"
+  date        DateTime
+  time        String
   jobType     String
   address     String
+  rate        Float?
   templateId  String?
   template    RecurringTemplate? @relation(fields: [templateId], references: [id])
   createdAt   DateTime  @default(now())
 }
 
-// A weekly-recurring rule a manager creates; the API expands it into
-// concrete Shift rows for the current/upcoming work week.
 model RecurringTemplate {
   id         String   @id @default(cuid())
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id])
-  dayOfWeek  Int      // 0=Sun..6=Sat, JS getDay() convention
+  dayOfWeek  Int
   time       String
   jobType    String
   address    String
@@ -78,6 +77,7 @@ model RecurringTemplate {
   shifts     Shift[]
   createdAt  DateTime @default(now())
 }
+
 enum RequestStatus {
   PENDING
   APPROVED
@@ -94,6 +94,7 @@ model TimeOffRequest {
   status     RequestStatus @default(PENDING)
   createdAt  DateTime      @default(now())
 }
+
 model JobRate {
   id         String   @id @default(cuid())
   employeeId String
@@ -116,6 +117,7 @@ model WeeklyBonus {
 
   @@unique([employeeId, weekStart])
 }
+
 model WeekApproval {
   id         String   @id @default(cuid())
   employeeId String
