@@ -19,6 +19,7 @@ export default function ManagerProfile() {
         <Link href="/manager/timeoff" style={linkStyle}>Approve time-off requests</Link>
         <Link href="/manager/approvals" style={linkStyle}>Approve weekly hours</Link>
         <Link href="/manager/timesheets" style={linkStyle}>Edit timesheets</Link>
+        <Link href="/manager/calendar" style={linkStyle}>Schedule calendar</Link>
         <Link href="/manager/payroll" style={linkStyle}>Payroll export</Link>
         <ChangePasswordForm />
       </div>
