@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import BlueprintCard from "@/components/BlueprintCard";
 
 const JOB_TYPES = ["Residential Cleaning", "Commercial Cleaning", "Local Moving", "Long-Distance Moving", "Lawn Care"];
-const emptyForm = { employeeId: "", jobType: JOB_TYPES[0], address: "", date: "", time: "", repeats: false };
+const emptyForm = { employeeId: "", jobType: JOB_TYPES[0], address: "", date: "", time: "", repeats: false, rate: "" };
 
 export default function ManagerSchedule() {
   const [shifts, setShifts] = useState<any[]>([]);
@@ -40,6 +40,7 @@ export default function ManagerSchedule() {
       date: new Date(s.date).toISOString().slice(0, 10),
       time: s.time,
       repeats: s.repeats,
+      rate: s.rate !== null && s.rate !== undefined ? String(s.rate) : "",
     });
     setShowForm(true);
   }
@@ -114,6 +115,12 @@ export default function ManagerSchedule() {
               Repeats weekly
             </label>
           )}
+          {!form.repeats && (
+            <div className="field">
+              <label>Pay rate for this job ($/hr, optional override)</label>
+              <input className="input" type="number" min="0" step="0.01" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} placeholder="Leave blank to use employee's normal rate" />
+            </div>
+          )}
           <button className="btn btn-primary btn-block" onClick={submit}>{editingId ? "Save Changes" : "Save Shift"}</button>
         </BlueprintCard>
       )}
@@ -127,7 +134,10 @@ export default function ManagerSchedule() {
             </div>
             <div className="card-meta">{s.jobType} — {s.address}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
-              {s.repeats ? <div className="tag tag-outline">↻ Repeats weekly</div> : <span />}
+              <div style={{ display: "flex", gap: 6 }}>
+                {s.repeats && <div className="tag tag-outline">↻ Repeats weekly</div>}
+                {s.rate != null && <div className="tag tag-accent">${s.rate.toFixed(2)}/hr</div>}
+              </div>
               <div style={{ display: "flex", gap: 6 }}>
                 <button className="btn" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => startEdit(s)}>Edit</button>
                 <button className="btn" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => removeShift(s)}>Delete</button>
